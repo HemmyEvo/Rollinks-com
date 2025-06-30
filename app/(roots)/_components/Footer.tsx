@@ -44,7 +44,7 @@ const Footer = () => {
       links: [
         { name: "About Us", href: "/about-us" },
         { name: "Contact Us", href: "/contact" },
-       { name: "Our history", href: "/history" },
+       { name: "My history", href: "/history" },
       ]
     },
     
