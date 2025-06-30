@@ -131,7 +131,9 @@ const AboutUsPage = (props: Props) => {
                 </p>
               </div>
               <p className="mt-6 text-gray-700">
-                Connect with our skincare specialists at <span className="font-semibold text-emerald-700">07010331943</span>
+                Connect with our skincare specialists at <span className="font-semibold text-emerald-700">
+                <a href="tel:+2347053142223">
+07053142223</span>
               </p>
               <div className="mt-8 pt-6 border-t border-white/30">
                 <p className="text-gray-700 italic">
