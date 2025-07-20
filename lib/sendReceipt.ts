@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
  
 
-const resend = new Resend("re_2NSFAmQn_E768vLnbCDzXRVi2MAyj8hco")
+const resend = new Resend('re_EN8okvcF_L9m5qdbhoAvGsD4ZYjVmpEcx')
 
 interface Item {
   name: string;
@@ -65,8 +65,8 @@ export async function sendReceipt({
   `;
 
   return await resend.emails.send({
-    from: 'rollinks@resend.dev',
-    to: email,
+    from: 'onboarding@resend.dev',
+    to: 'sukuratopeyemi17@gmail.com',
     subject: `🧾 Your Rollinks Receipt – Order #${orderId}`,
     html: htmlContent,
   });
