@@ -1,7 +1,12 @@
-// lib/sendReceipt.ts
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resendApiKey = process.env.RESEND_API_KEY;
+
+if (!resendApiKey) {
+  throw new Error('Missing RESEND_API_KEY in environment variables');
+}
+
+const resend = new Resend(resendApiKey);
 
 interface Item {
   name: string;
@@ -69,6 +74,5 @@ export async function sendReceipt({
     to: email,
     subject: `🧾 Your Rollinks Receipt – Order #${orderId}`,
     html: htmlContent,
-    // cc: 'admin@yourcompany.com' // Optional: copy to admin
   });
 }
