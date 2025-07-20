@@ -11,7 +11,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { useRouter } from 'next/navigation';
 import { FiX, FiCheck, FiLoader, FiMapPin, FiUser, FiMail, FiPhone, FiHome,FiInfo } from 'react-icons/fi';
 import Loading from "@/components/ui/Loading";
-
+import { sendReceipt } from '@/lib/sendReceipt';
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
