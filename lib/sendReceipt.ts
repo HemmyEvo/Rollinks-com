@@ -65,7 +65,7 @@ export async function sendReceipt({
   `;
 
   return await resend.emails.send({
-    from: 'Rollinks <onboarding@resend.dev>',
+    from: 'Rollinks@resend.dev',
     to: email,
     subject: `🧾 Your Rollinks Receipt – Order #${orderId}`,
     html: htmlContent,
