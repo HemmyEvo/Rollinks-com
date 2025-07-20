@@ -329,15 +329,25 @@ const handleBankTransferConfirmation = async () => {
 
   try {
     await client.create(orderDoc);
-    await sendReceipt({
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      items: orderItem.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-      total: totalAmount,
-      shipping: shippingFee,
-      orderId: orderDoc.orderId,
-      paymentMethod: 'Bank Transfer'
-    });
+    await fetch('/api/send-receipt', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: `${formData.firstName} ${formData.lastName}`,
+    email: formData.email,
+    items: Object.values(cartDetails || {}).map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    total: totalAmount,
+    shipping: shippingFee,
+    orderId: orderDoc.orderId,
+    paymentMethod: 'Bank Transfer',
+  }),
+});
     setPaymentDone(true);
   } catch (error) {
     console.error('Error creating order:', error);
@@ -428,15 +438,23 @@ const handlePaystackPayment = async () => {
         const createdOrder = await client.create(orderDoc);
         setOrderId(createdOrder.orderId);
 
-        await sendReceipt({
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-          total: totalAmount,
-          shipping: shippingFee,
-          orderId: createdOrder.orderId,
-          paymentMethod: 'Paystack'
-        });
+        await fetch('/api/send-receipt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        items: Object.values(cartDetails || {}).map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total: totalAmount,
+        shipping: shippingFee,
+        orderId: createdOrder.orderId,
+        paymentMethod: 'Paystack',
+      }),
+    });
 
       } catch (error) {
         console.error('Error saving order:', error);
