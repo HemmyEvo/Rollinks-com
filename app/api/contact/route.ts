@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { name, email, message } = await req.json()
 
     const data = await resend.emails.send({
-      from: 'Rollinks <noreply@resend.dev>', // safe for free plan
+      from: 'Rollinks <onboarding@resend.dev>', // safe for free plan
       to: ['atilolaemmanuel22@email.com'],         // your real email address
       subject: `New message from ${name}`,
       replyTo: email,
