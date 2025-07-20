@@ -15,7 +15,7 @@ console.log('Resend API Key:', process.env.RESEND_API_KEY)
     }
 
     const data = await resend.emails.send({
-      from: 'Rollinks@resend.dev', // using resend.dev if no domain
+      from: 'rollinks@resend.dev', // using resend.dev if no domain
       to: ['atilolaemmanuel22@gmail.com'], // your actual email here
       subject: `New message from ${name}`,
       replyTo: email,
