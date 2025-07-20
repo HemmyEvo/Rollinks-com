@@ -1,12 +1,7 @@
 import { Resend } from 'resend';
  
-const resendApiKey = process.env.RESEND_API_KEY;
-console.log(resendApiKey)
-if (!resendApiKey) {
-  throw new Error('Missing RESEND_API_KEY in environment variables');
- console.log(resendApiKey)
-}
-const resend = new Resend(process.env.RESEND_API_KEY)
+
+const resend = new Resend("re_2NSFAmQn_E768vLnbCDzXRVi2MAyj8hco")
 
 interface Item {
   name: string;
