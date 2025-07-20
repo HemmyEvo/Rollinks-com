@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const data = await resend.emails.send({
       from: 'Rollinks <onboarding@resend.dev>', // using resend.dev if no domain
-      to: ['your@email.com'], // your actual email here
+      to: ['atilolaemmanuel22@gmail.com'], // your actual email here
       subject: `New message from ${name}`,
       reply_to: email,
       html: `
