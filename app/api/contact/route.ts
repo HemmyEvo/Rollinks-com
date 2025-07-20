@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       from: 'Rollinks <noreply@resend.dev>', // safe for free plan
       to: ['atilolaemmanuel22@email.com'],         // your real email address
       subject: `New message from ${name}`,
-      reply_to: email,
+      replyTo: email,
       html: `
         <div style="font-family: sans-serif;">
           <h2>Contact Form Message</h2>
