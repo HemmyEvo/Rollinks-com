@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       from: 'Rollinks <onboarding@resend.dev>', // using resend.dev if no domain
       to: ['atilolaemmanuel22@gmail.com'], // your actual email here
       subject: `New message from ${name}`,
-      reply_to: email,
+      replyTo: email,
       html: `
         <div style="font-family: Arial, sans-serif; font-size: 14px;">
           <h2>📩 Contact Form Submission</h2>
