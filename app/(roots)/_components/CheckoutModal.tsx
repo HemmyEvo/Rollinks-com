@@ -252,9 +252,8 @@ const handlePaymentInitiation = () => {
 const handleBankTransferConfirmation = async () => {
   setPaymentSent(true);
   setLoading(true);
-  
-  // Prepare order items for WhatsApp message
-  const orderItems = cartDetails 
+
+  const orderItems = cartDetails
     ? Object.values(cartDetails).map(item => (
         `${item.name} (${item.quantity} x ${item.price}${item.currency})`
       )).join('\n')
@@ -267,232 +266,200 @@ const handleBankTransferConfirmation = async () => {
     Phone: ${formData.phone}
     Address: ${formData.address}, ${selectedLocation?.label || ''}, ${selectedState?.label || ''}, ${selectedCountry?.label || ''}
     Postal Code: ${formData.postalCode}
-    
+
     *Order Items:*
     ${orderItems}
-    
+
     *Total Amount:* ${totalAmount} NGN
     Delivery Instructions: ${formData.deliveryInstructions || 'None'}
   `;
 
-  // Encode message for WhatsApp URL
   const whatsappMessage = encodeURIComponent(customerInfo);
   const whatsappUrl = `https://wa.me/2347053142223?text=${whatsappMessage}`;
-  
-  
-  // Create order document in Sanity (similar to Paystack version but with payment method as bank transfer)
-  const orderItem = cartDetails 
-  ? Object.values(cartDetails).map((item) => ({
-      _key: item.id,
-      product: {
-        _type: 'reference',
-        _ref: item.id,
-      },
-      name: item.name,
-      quantity: item.quantity,
-      price: item.price,
-      currency: item.currency,
-      image: item.image,
-    }))
-  : [];
+
+  const orderItem = cartDetails
+    ? Object.values(cartDetails).map((item) => ({
+        _key: item.id,
+        product: { _type: 'reference', _ref: item.id },
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        currency: item.currency,
+        image: item.image,
+      }))
+    : [];
 
   const orderDoc = {
-            _type: 'order',
-            orderId: `ORD-${Date.now()}`,
-            status: 'processing',
-            customer: {
-              name: `${formData.firstName} ${formData.lastName}`,
-              email: formData.email,
-              phone: formData.phone,
-              userId: userId || null
-            }, 
-            shippingAddress: {
-              street: formData.address,
-              city: selectedLocation?.value === 'custom' ? customCity : selectedLocation?.label || '',
-              state: selectedState?.label || '',
-              country: selectedCountry?.label || '',
-              postalCode: formData.postalCode,
-              specialInstructions: formData.deliveryInstructions
-            },
-            items: orderItem,
-            payment: {
-              method: 'Bank Transfer',
-              status: 'pending',
-              transactionId: `T${Date.now()}`,
-              amount: totalAmount,
-              currency: 'NGN'
-            },
-            shipping: {
-              method: 'standard',
-              cost: shippingFee,
-              carrier: 'Local Delivery'
-            },
-            subtotal: totalPrice || 0,
-            total: totalAmount,
-            discount: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
+    _type: 'order',
+    orderId: `ORD-${Date.now()}`,
+    status: 'processing',
+    customer: {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      phone: formData.phone,
+      userId: userId || null
+    },
+    shippingAddress: {
+      street: formData.address,
+      city: selectedLocation?.value === 'custom' ? customCity : selectedLocation?.label || '',
+      state: selectedState?.label || '',
+      country: selectedCountry?.label || '',
+      postalCode: formData.postalCode,
+      specialInstructions: formData.deliveryInstructions
+    },
+    items: orderItem,
+    payment: {
+      method: 'Bank Transfer',
+      status: 'pending',
+      transactionId: `T${Date.now()}`,
+      amount: totalAmount,
+      currency: 'NGN'
+    },
+    shipping: {
+      method: 'standard',
+      cost: shippingFee,
+      carrier: 'Local Delivery'
+    },
+    subtotal: totalPrice || 0,
+    total: totalAmount,
+    discount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
 
-  // Save to Sanity (implement your Sanity client code here)
   try {
     await client.create(orderDoc);
-    setPaymentDone(true)
-    
-    // Handle success
+    await sendReceipt({
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      items: orderItem.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+      total: totalAmount,
+      shipping: shippingFee,
+      orderId: orderDoc.orderId,
+      paymentMethod: 'Bank Transfer'
+    });
+    setPaymentDone(true);
   } catch (error) {
     console.error('Error creating order:', error);
-    // Handle error
   }
 
-  setLoading(false)
-handleCartClick(); // Close cart after submission
-clearCart();
+  setLoading(false);
+  handleCartClick();
+  clearCart();
 };
 
+const handlePaystackPayment = async () => {
+  handleCartClick();
+  setLoading(true);
 
-  const handlePaystackPayment = async () => {
-      
-  
-    handleCartClick()
-    setLoading(true);
-    
-    // Temporarily hide our modal while Paystack is open.
-    if (modalRef.current) {
-      modalRef.current.style.display = 'none';
-    }
+  if (modalRef.current) {
+    modalRef.current.style.display = 'none';
+  }
 
-    const paystack = new PaystackInline();
-    paystack.newTransaction({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-      email: formData.email,
-      amount: totalAmount * 100,
-      currency: 'NGN',
-      metadata: {
-        custom_fields: [
-          {
-            display_name: 'Full Name',
-            variable_name: 'full_name',
-            value: `${formData.firstName} ${formData.lastName}`,
-          },
-          {
-            display_name: 'Phone Number',
-            variable_name: 'phone',
-            value: formData.phone,
-          },
-          {
-            display_name: 'Address',
-            variable_name: 'address',
-            value: formData.address,
-          },
-          {
-            display_name: 'Postal Code',
-            variable_name: 'postal_code',
-            value: formData.postalCode,
-          },
-          {
-            display_name: 'City',
-            variable_name: 'city',
-            value: selectedLocation?.value === 'custom' ? customCity : selectedLocation?.label || '',
-          },
-          {
-            display_name: 'State',
-            variable_name: 'state',
-            value: selectedState?.label || '',
-          },
-          {
-            display_name: 'Country',
-            variable_name: 'country',
-            value: selectedCountry?.label || '',
-          },
-        ],
-      },
-      onSuccess: async (response: any) => {
-        try {
-          // Prepare order items for Sanity
-   const orderItems = cartDetails 
-  ? Object.values(cartDetails).map((item) => ({
-      _key: item.id,
-      product: {
-        _type: 'reference',
-        _ref: item.id,
-      },
-      name: item.name,
-      quantity: item.quantity,
-      price: item.price,
-      currency: item.currency,
-      image: item.image,
-    }))
-  : [];
+  const paystack = new PaystackInline();
+  paystack.newTransaction({
+    key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+    email: formData.email,
+    amount: totalAmount * 100,
+    currency: 'NGN',
+    metadata: {
+      custom_fields: [
+        { display_name: 'Full Name', variable_name: 'full_name', value: `${formData.firstName} ${formData.lastName}` },
+        { display_name: 'Phone Number', variable_name: 'phone', value: formData.phone },
+        { display_name: 'Address', variable_name: 'address', value: formData.address },
+        { display_name: 'Postal Code', variable_name: 'postal_code', value: formData.postalCode },
+        { display_name: 'City', variable_name: 'city', value: selectedLocation?.value === 'custom' ? customCity : selectedLocation?.label || '' },
+        { display_name: 'State', variable_name: 'state', value: selectedState?.label || '' },
+        { display_name: 'Country', variable_name: 'country', value: selectedCountry?.label || '' },
+      ],
+    },
+    onSuccess: async (response) => {
+      try {
+        const orderItems = cartDetails
+          ? Object.values(cartDetails).map((item) => ({
+              _key: item.id,
+              product: { _type: 'reference', _ref: item.id },
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+              currency: item.currency,
+              image: item.image,
+            }))
+          : [];
 
-          // Create order document for Sanity
-          const orderDoc = {
-            _type: 'order',
-            orderId: `ORD-${Date.now()}`,
-            status: 'processing',
-            customer: {
-              name: `${formData.firstName} ${formData.lastName}`,
-              email: formData.email,
-              phone: formData.phone,
-              userId: userId || null
-            }, 
-            shippingAddress: {
-              street: formData.address,
-              city: selectedLocation?.value === 'custom' ? customCity : selectedLocation?.label || '',
-              state: selectedState?.label || '',
-              country: selectedCountry?.label || '',
-              postalCode: formData.postalCode,
-              specialInstructions: formData.deliveryInstructions
-            },
-            items: orderItems,
-            payment: {
-              method: 'paystack',
-              status: 'completed',
-              transactionId: response.reference,
-              amount: totalAmount,
-              currency: 'NGN'
-            },
-            shipping: {
-              method: 'standard',
-              cost: shippingFee,
-              carrier: 'Local Delivery'
-            },
-            subtotal: totalPrice || 0,
-            total: totalAmount,
-            discount: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
+        const orderDoc = {
+          _type: 'order',
+          orderId: `ORD-${Date.now()}`,
+          status: 'processing',
+          customer: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            userId: userId || null
+          },
+          shippingAddress: {
+            street: formData.address,
+            city: selectedLocation?.value === 'custom' ? customCity : selectedLocation?.label || '',
+            state: selectedState?.label || '',
+            country: selectedCountry?.label || '',
+            postalCode: formData.postalCode,
+            specialInstructions: formData.deliveryInstructions
+          },
+          items: orderItems,
+          payment: {
+            method: 'paystack',
+            status: 'completed',
+            transactionId: response.reference,
+            amount: totalAmount,
+            currency: 'NGN'
+          },
+          shipping: {
+            method: 'standard',
+            cost: shippingFee,
+            carrier: 'Local Delivery'
+          },
+          subtotal: totalPrice || 0,
+          total: totalAmount,
+          discount: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
 
-          // Save to Sanity
-          const createdOrder = await client.create(orderDoc);
-          setOrderId(createdOrder.orderId);
-         
-          
-        } catch (error) {
-          console.error('Error saving order:', error);
-          alert(error)
-          alert('Order was successful but there was an issue saving your details. Please contact support with your payment reference.');
-        } finally {
-          clearCart();
-          setLoading(false);
-          // Show our modal again
-          if (modalRef.current) {
-            modalRef.current.style.display = 'block';
-          }
-        
-        }
-      },
-      onCancel: () => {
+        const createdOrder = await client.create(orderDoc);
+        setOrderId(createdOrder.orderId);
+
+        await sendReceipt({
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+          total: totalAmount,
+          shipping: shippingFee,
+          orderId: createdOrder.orderId,
+          paymentMethod: 'Paystack'
+        });
+
+      } catch (error) {
+        console.error('Error saving order:', error);
+        alert(error);
+        alert('Order was successful but there was an issue saving your details. Please contact support with your payment reference.');
+      } finally {
+        clearCart();
         setLoading(false);
-        setPaymentDone(true)
-        // Show our modal again if payment is cancelled
         if (modalRef.current) {
           modalRef.current.style.display = 'block';
         }
-      },
-    });
-  };
+      }
+    },
+    onCancel: () => {
+      setLoading(false);
+      setPaymentDone(true);
+      if (modalRef.current) {
+        modalRef.current.style.display = 'block';
+      }
+    },
+  });
+};
+
 const items = cartDetails
   ? Object.values(cartDetails).map(
       (item) => `${item.name} (Qty: ${item.quantity}) - ₦${(item.price * item.quantity).toLocaleString()}`
