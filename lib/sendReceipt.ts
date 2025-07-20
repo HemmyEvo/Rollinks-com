@@ -4,9 +4,9 @@ const resendApiKey = process.env.RESEND_API_KEY;
 
 if (!resendApiKey) {
   throw new Error('Missing RESEND_API_KEY in environment variables');
+ console.log(resendApiKey)
 }
-
-const resend = new Resend(resendApiKey);
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 interface Item {
   name: string;
