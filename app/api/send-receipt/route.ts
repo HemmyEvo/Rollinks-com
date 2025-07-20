@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await resend.emails.send({
-      from: 'Rollinks <onboarding@resend.dev>',
+      from: 'rollinks@resend.dev',
       to: email,
       subject: `🧾 Your Rollinks Receipt – Order #${orderId}`,
       html,
