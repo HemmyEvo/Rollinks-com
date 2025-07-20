@@ -1,9 +1,8 @@
 'use client'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { Leaf,LeafyGreen, Mail, User, MessageSquare, Send } from 'lucide-react'
-import { useState } from 'react'
-import emailjs from 'emailjs-com'
+import { Leaf, LeafyGreen, Mail, User, MessageSquare, Send } from 'lucide-react'
 
 const ContactPage = () => {
   const [isSending, setIsSending] = useState(false)
@@ -12,21 +11,32 @@ const ContactPage = () => {
   const [message, setMessage] = useState('')
   const [contactMessage, setContactMessage] = useState('')
 
-  const sendEmail = (e: React.FormEvent) => {
+  const sendEmail = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSending(true)
 
-    emailjs.sendForm('service_2gxwh09', 'template_lcap4pf', e.target as HTMLFormElement, '_A7yErceDiU4I-Ppb')
-      .then(() => {
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message })
+      })
+
+      const result = await res.json()
+      if (result.success) {
         setContactMessage('Message sent successfully ✅')
-        setTimeout(() => setContactMessage(''), 5000)
         setName('')
         setEmail('')
         setMessage('')
-      }, () => {
-        setContactMessage('Message not sent (service error) ❌')
-      })
-      .finally(() => setIsSending(false))
+      } else {
+        setContactMessage('Message not sent (server error) ❌')
+      }
+    } catch {
+      setContactMessage('Network error. Try again later ❌')
+    } finally {
+      setTimeout(() => setContactMessage(''), 5000)
+      setIsSending(false)
+    }
   }
 
   return (
@@ -37,9 +47,7 @@ const ContactPage = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="w-full max-w-2xl">
-        {/* Glass Card Container */}
         <div className="backdrop-blur-lg bg-white/80 rounded-3xl shadow-lg overflow-hidden border border-white/20">
-          {/* Decorative Header */}
           <div className="bg-emerald-500/10 p-6 text-center border-b border-white/20">
             <div className="flex justify-center space-x-3 mb-3">
               <Leaf className="w-6 h-6 text-emerald-600" />
@@ -52,7 +60,6 @@ const ContactPage = () => {
             <p className="text-emerald-700 mt-1">We'd love to hear from you</p>
           </div>
 
-          {/* Form Content */}
           <form onSubmit={sendEmail} className="p-6 md:p-8 space-y-6">
             {/* Name Field */}
             <div className="backdrop-blur-sm bg-white/60 p-4 rounded-xl border border-white/30 shadow-sm">
