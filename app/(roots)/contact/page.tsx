@@ -17,20 +17,23 @@ const ContactPage = () => {
 
     try {
       const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message })
-      })
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name, email, message })
+})
 
-      const result = await res.json()
-      if (result.success) {
-        setContactMessage('Message sent successfully ✅')
-        setName('')
-        setEmail('')
-        setMessage('')
-      } else {
-        setContactMessage('Message not sent (server error) ❌')
-      }
+const result = await res.json()
+
+if (res.status === 200 && result.success) {
+  setContactMessage('Message sent successfully ✅')
+  setName('')
+  setEmail('')
+  setMessage('')
+} else if (res.status === 401) {
+  setContactMessage('You need to login before you can contact us')
+} else {
+  setContactMessage('Message not sent (server error) ❌')
+}
     } catch {
       setContactMessage('Network error. Try again later ❌')
     } finally {
